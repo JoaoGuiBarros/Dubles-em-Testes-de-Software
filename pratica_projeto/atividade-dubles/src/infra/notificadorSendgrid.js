@@ -7,6 +7,7 @@ import sgMail from '@sendgrid/mail';
  * `subject`, `text`. Isso é esperado num adaptador — ele existe
  * justamente para traduzir. O problema começa quando essa linguagem
  * vaza para o TESTE.
+ * @implements {import('../portas/Notificador.js').Notificador}
  */
 export class NotificadorSendgrid {
   constructor(chaveApi, remetente) {
