@@ -4,12 +4,6 @@ import { renovarAssinatura } from '../src/renovarAssinatura.js';
 import { AssinaturaCanceladaError } from '../src/erros.js';
 import { assinaturaAtiva, assinaturaCancelada } from './fixtures.js';
 
-vi.mock('@sendgrid/mail', () => ({
-    default: {
-        setApiKey: vi.fn(),
-        send: vi.fn(),
-    },
-}));
 
 // Segui a mesma linha de raciocínio do relogioFixo do teste anterior.
 const relogioFixo = { hoje: () => new Date('2026-03-01T00:00:00Z') }; 

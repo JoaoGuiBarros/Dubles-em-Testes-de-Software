@@ -5,21 +5,12 @@
  * └────────────────────────────────────────────────────────────────────┘
  */
 
-import { test, expect, vi } from 'vitest';
-import sgMail from '@sendgrid/mail';
+import { expect, test, vi } from 'vitest';
 
-import { renovarAssinatura } from '../src/renovarAssinatura.js';
-import { NotificadorSendgrid } from '../src/infra/notificadorSendgrid.js';
 import { AssinaturaCanceladaError } from '../src/erros.js';
-import { assinaturaAtiva, assinaturaCancelada }
-  from './fixtures.js';
+import { renovarAssinatura } from '../src/renovarAssinatura.js';
+import { assinaturaAtiva, assinaturaCancelada } from './fixtures.js';
 
-vi.mock('@sendgrid/mail', () => ({
-  default: {
-    setApiKey: vi.fn(),
-    send: vi.fn(),
-  },
-}));
 
 const relogioFixo = { hoje: () => new Date('2026-03-01T00:00:00Z') };
 
@@ -103,15 +94,17 @@ test('T5 — assinatura cancelada é rejeitada', async () => {
 
 // ── T6 ───────────────────────────────────────────────────────────────
 test('T6 — envia o e-mail de confirmação', async () => {
-  sgMail.send.mockResolvedValue([{ statusCode: 202 }]);
+  const repositorioDummy = { salvar: vi.fn() };
+  const gatewayStub = { cobrar: vi.fn().mockResolvedValue({ status: 'aprovado' }) };
+  const notificadorSpy = { enviar: vi.fn() };
 
-  const notificador = new NotificadorSendgrid('CHAVE-FAKE', 'no-reply@exemplo.com');
-  await notificador.enviar('ana@exemplo.com', 'Assinatura renovada até 31/03/2026');
+  await renovarAssinatura(
+    assinaturaAtiva(), repositorioDummy, gatewayStub, notificadorSpy, relogioFixo
+  );
 
-  expect(sgMail.send).toHaveBeenCalledWith(
-    expect.objectContaining({
-      to: 'ana@exemplo.com',
-      subject: 'Assinatura renovada até 31/03/2026',
-    })
+  expect(notificadorSpy.enviar).toHaveBeenCalledTimes(1);
+  expect(notificadorSpy.enviar).toHaveBeenCalledWith(
+    'ana@exemplo.com',
+    'Assinatura renovada até 31/03/2026'
   );
 });
